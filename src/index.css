@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@keyframes flow-beams {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+@keyframes pulse-glowing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.65;
+  }
+}
+
+@keyframes astrolabe-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.flowing-aspect {
+  stroke-dasharray: 6 4;
+  animation: flow-beams 1.2s linear infinite;
+}
+
+.flowing-aspect-slow {
+  stroke-dasharray: 8 6;
+  animation: flow-beams 2.5s linear infinite;
+}
+
+.pulse-glowing-halo {
+  animation: pulse-glowing 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: astrolabe-spin 120s linear infinite;
+}
+
+.animate-spin-ultra-slow {
+  animation: astrolabe-spin 240s linear infinite;
+}
+
+/* Highly fluid SVG Transitions for interactive celestial feedback */
+.aspect-ray {
+  transition: stroke-opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              stroke-width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              stroke 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.natal-core, 
+.transit-core {
+  transition: r 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              stroke 0.3s ease, 
+              fill 0.3s ease, 
+              filter 0.4s ease;
+}
+
+.natal-node text, 
+.transit-node text {
+  transition: fill 0.3s ease, 
+              fill-opacity 0.3s ease, 
+              font-weight 0.3s ease;
+}
+
+.pulse-halo {
+  transition: stroke-opacity 0.4s ease, 
+              fill-opacity 0.4s ease, 
+              stroke 0.4s ease, 
+              fill 0.4s ease,
+              r 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.aspect-badge-group {
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
