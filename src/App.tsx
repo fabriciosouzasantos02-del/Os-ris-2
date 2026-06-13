@@ -478,11 +478,17 @@ export default function App() {
   const [firebaseErrors, setFirebaseErrors] = useState<any[]>([]);
 
   // Authentication states
-  const [authTab, setAuthTab] = useState<'register' | 'login' | 'forgot_password'>('register');
+  const [authTab, setAuthTab] = useState<'birth_info' | 'register_credentials' | 'login' | 'forgot_password'>('birth_info');
   const [forgotEmail, setForgotEmail] = useState('');
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
+  
+  // Custom auth design flow helpers
+  const [showAscExplain, setShowAscExplain] = useState(false);
+  const [newsletterConsent, setNewsletterConsent] = useState(false);
+  const [termsConsent, setTermsConsent] = useState(false);
+  const [timeIsUnknown, setTimeIsUnknown] = useState(false);
 
   // Social login and password reset handler integrations
   const handleGoogleLogin = async () => {
@@ -654,9 +660,9 @@ export default function App() {
     const newUserProfile: UserProfile = {
       name: createMainName || "Viajante Estelar",
       birthDate: createMainDate || "",
-      birthTime: createMainTime || "",
+      birthTime: timeIsUnknown ? "12:00" : (createMainTime || ""),
       birthCity: createMainCity || "",
-      isUnknownTime: false,
+      isUnknownTime: timeIsUnknown,
       isPremium: true,
       hasCreatedMap: hasProvidedData,
       email: mailLower,
@@ -695,8 +701,9 @@ export default function App() {
       email: mailLower,
       name: newUserProfile.name,
       birthDate: newUserProfile.birthDate,
-      birthTime: newUserProfile.birthTime || "",
+      birthTime: timeIsUnknown ? "12:00" : (newUserProfile.birthTime || ""),
       birthCity: newUserProfile.birthCity,
+      isUnknownTime: timeIsUnknown,
       isPremium: true,
       hasCreatedMap: hasProvidedData,
       scorePoints: 0
@@ -1735,213 +1742,299 @@ export default function App() {
             <div id="auth-card" className="lg:col-span-6 bg-slate-900/40 p-6 sm:p-8 rounded-[36px] border border-amber-500/15 backdrop-blur-md shadow-2xl space-y-6 relative overflow-hidden text-left">
               <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[90px] pointer-events-none" />
               
-              <div className="flex bg-slate-950/80 p-1 rounded-2xl border border-slate-850">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthTab('register');
-                    // Reset fields for fresh registration
-                    setAuthEmail('');
-                    setAuthPassword('');
-                    setCreateMainName('');
-                    setCreateMainDate('');
-                    setCreateMainTime('');
-                    setCreateMainCity('');
-                  }}
-                  className={`flex-1 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                    authTab === 'register' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Criar Conta
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthTab('login');
-                    setAuthEmail('');
-                    setAuthPassword('');
-                  }}
-                  className={`flex-1 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                    authTab === 'login' || authTab === 'forgot_password' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Entrar
-                </button>
-              </div>
-
-              {/* Fast Third-Party Direct Access Providers */}
-              {authTab !== 'forgot_password' && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Google OAuth Button */}
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-xs font-bold transition duration-300 active:scale-98 shadow-sm cursor-pointer"
-                    >
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.12-3.12C17.43 1.68 14.9 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.6 2.8c.85-2.5 3.19-4.26 6.9-4.26z"
-                        />
-                        <path
-                          fill="#4285F4"
-                          d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.47h6.43c-.28 1.44-1.09 2.66-2.31 3.48l3.6 2.8c2.1-1.94 3.77-5.17 3.77-8.39z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.1 14.7c-.24-.73-.38-1.5-.38-2.3a7.3 7.3 0 01.38-2.3L1.5 7.3A11.9 11.9 0 000 12c0 1.74.37 3.4 1.03 4.9l4.07-3.2z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1.1 1.74-2.5 1.83-4.36 1.83-3.71 0-6.05-1.76-6.9-4.26L1.03 18.1C2.9 21.95 6.85 24 12 24z"
-                        />
-                      </svg>
-                      Google
-                    </button>
-
-                    {/* Facebook Authentication Button */}
-                    <button
-                      type="button"
-                      onClick={handleFacebookLogin}
-                      className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs font-bold transition duration-300 active:scale-98 shadow-sm cursor-pointer"
-                    >
-                      <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                      </svg>
-                      Facebook
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-3 pt-1">
-                    <span className="h-[1px] flex-1 bg-slate-800" />
-                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">ou entre com e-mail</span>
-                    <span className="h-[1px] flex-1 bg-slate-800" />
-                  </div>
-                </div>
-              )}
-
-              {authTab === 'register' && (
+              {/* SCREEN A: Faça seu mapa astral gratuito */}
+              {authTab === 'birth_info' && (
                 <>
                   <div className="space-y-1">
-                    <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2.5">
-                      <Star className="w-5 h-5 text-amber-500 animate-pulse fill-amber-500/20" />
-                      Crie sua Conta & Mapa Astral
-                    </h3>
-                    <p className="text-xs text-slate-400">Cadastre-se para salvar os seus dados celestes de forma segura.</p>
+                    <h2 className="text-lg font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-250 font-sans uppercase">
+                      Faça seu mapa astral gratuito
+                    </h2>
+                    <p className="text-xs text-slate-400">Preencha seus dados natais terrestres para que possamos sintonizar os astros para você.</p>
                   </div>
 
-                  <form onSubmit={handleRegisterAccountSubmit} className="space-y-4">
+                  {/* Help Modal Popup for Birth Time */}
+                  {showAscExplain && (
+                    <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/25 text-[11px] text-amber-200/90 leading-relaxed font-sans relative">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowAscExplain(false)}
+                        className="absolute top-2 right-2 text-slate-400 hover:text-white px-2 py-0.5 text-[10px] font-black cursor-pointer bg-slate-950/60 rounded-md"
+                      >
+                        ✕
+                      </button>
+                      <p className="pr-4">
+                        O horário do seu nascimento é o que permite o cálculo do seu ascendente e tudo o que é relativo a ele. É uma informação muito importante para que possamos criar o seu mapa astral completo! Você pode conseguir essa informação em sua certidão de nascimento.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">(Em qual cidade você nasceu?)</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="Ex: São Paulo, SP"
+                        value={createMainCity}
+                        onChange={(e) => setCreateMainCity(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">Seu E-mail</label>
+                        <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">(Qual sua data de nascimento?)</label>
                         <input 
-                          type="email" 
-                          required 
-                          placeholder="e.g. maria@provedor.com"
-                          value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                          type="date" 
+                          required
+                          value={createMainDate}
+                          onChange={(e) => setCreateMainDate(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">Senha de Acesso</label>
+                        <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">(Qual seu horário de nascimento?)</label>
                         <input 
-                          type="password" 
-                          required 
-                          placeholder="Defina uma senha"
-                          value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                          type="text" 
+                          disabled={timeIsUnknown}
+                          required={!timeIsUnknown}
+                          placeholder={timeIsUnknown ? "Informar depois..." : "Ex: 15:30"}
+                          value={timeIsUnknown ? "" : createMainTime}
+                          onChange={(e) => setCreateMainTime(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50 disabled:opacity-40"
                         />
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-850 my-2 pt-4">
-                      <div className="text-[10px] uppercase font-mono tracking-widest text-slate-450 mb-3 block">Dados Celestes de Nascimento</div>
+                    {/* Unknown time checkbox */}
+                    <div className="flex items-center gap-2 mt-2 select-none">
+                      <input 
+                        type="checkbox" 
+                        id="unknown-time-checkbox"
+                        checked={timeIsUnknown}
+                        onChange={(e) => {
+                          setTimeIsUnknown(e.target.checked);
+                          if (e.target.checked) {
+                            setCreateMainTime("");
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-slate-700 bg-slate-950 accent-amber-500 cursor-pointer"
+                      />
+                      <label htmlFor="unknown-time-checkbox" className="text-[11px] text-slate-350 cursor-pointer flex items-center gap-1.5 font-sans leading-none">
+                        Não sei meu horário de nascimento / Informar depois
+                      </label>
+                      <button 
+                        type="button"
+                        onClick={() => setShowAscExplain(true)}
+                        className="p-1 text-xs text-amber-400 font-bold hover:text-amber-300 transition-all font-sans cursor-pointer shrink-0"
+                        title="Saiba mais"
+                      >
+                        [?]
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!createMainCity) {
+                            triggerGlobalNotification("Dados Incompletos", "Por favor, digite em qual cidade você nasceu.", "alert");
+                            return;
+                          }
+                          if (!createMainDate) {
+                            triggerGlobalNotification("Dados Incompletos", "Por favor, selecione sua data de nascimento.", "alert");
+                            return;
+                          }
+                          if (!timeIsUnknown && !createMainTime) {
+                            triggerGlobalNotification("Dados Incompletos", "Por favor, preencha o seu horário de nascimento ou marque que não sabe o horário.", "alert");
+                            return;
+                          }
+                          setAuthTab('register_credentials');
+                        }}
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-98 shadow-xl shadow-amber-500/10 cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Star className="w-4 h-4 text-slate-950 fill-current" />
+                        Cadastrar
+                      </button>
                       
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">Nome Completo</label>
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="Seu nome completo"
-                            value={createMainName}
-                            onChange={(e) => setCreateMainName(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
-                          />
-                        </div>
+                      <div className="text-center text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none py-1">
+                        ou
+                      </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">Data de Nascimento</label>
-                            <input 
-                              type="date" 
-                              required
-                              value={createMainDate}
-                              onChange={(e) => setCreateMainDate(e.target.value)}
-                              className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden"
-                            />
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest">Horário</label>
-                            </div>
-                            <input 
-                              type="text" 
-                              required
-                              placeholder="e.g. 15:30"
-                              value={createMainTime}
-                              onChange={(e) => setCreateMainTime(e.target.value)}
-                              className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">Cidade e Estado de Nascimento</label>
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="e.g. São Paulo, SP"
-                            value={createMainCity}
-                            onChange={(e) => setCreateMainCity(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                      <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-xs font-bold transition duration-300 active:scale-98 shadow-sm cursor-pointer"
+                      >
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.12-3.12C17.43 1.68 14.9 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.6 2.8c.85-2.5 3.19-4.26 6.9-4.26z"
                           />
-                        </div>
+                          <path
+                            fill="#4285F4"
+                            d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.47h6.43c-.28 1.44-1.09 2.66-2.31 3.48l3.6 2.8c2.1-1.94 3.77-5.17 3.77-8.39z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.1 14.7c-.24-.73-.38-1.5-.38-2.3a7.3 7.3 0 01.38-2.3L1.5 7.3A11.9 11.9 0 000 12c0 1.74.37 3.4 1.03 4.9l4.07-3.2z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1.1 1.74-2.5 1.83-4.36 1.83-3.71 0-6.05-1.76-6.9-4.26L1.03 18.1C2.9 21.95 6.85 24 12 24z"
+                          />
+                        </svg>
+                        Login com Google
+                      </button>
+                    </div>
+
+                    <div className="pt-3 text-center text-[10px] font-sans text-slate-400 leading-normal">
+                      Ao criar uma conta, você concorda com os <span className="text-amber-500 underline cursor-pointer">Termos de uso</span> e a <span className="text-amber-500 underline cursor-pointer">Política de privacidade</span>.
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-850 flex items-center justify-center gap-1.5 text-xs">
+                      <span className="text-slate-400 font-sans">Já tem um cadastro?</span>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setAuthTab('login');
+                          setAuthEmail('');
+                          setAuthPassword('');
+                        }}
+                        className="text-amber-400 hover:text-amber-300 font-black font-sans uppercase tracking-wider underline cursor-pointer transition"
+                      >
+                        Faça login
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* SCREEN B: Cadastrar (Credentials flow) */}
+              {authTab === 'register_credentials' && (
+                <>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-amber-500 animate-pulse fill-amber-500/20" />
+                      Criar sua Conta
+                    </h3>
+                    <p className="text-xs text-slate-450">Determine os dados pessoais para concluir a criação de perfil do mapa astral.</p>
+                  </div>
+
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!termsConsent) {
+                        triggerGlobalNotification("Ativação Obrigatória", "Você precisa concordar em conformidade com os Termos e a Política de privacidade para poder continuar.", "alert");
+                        return;
+                      }
+                      handleRegisterAccountSubmit(e);
+                    }} 
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">(Nome Completo)</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="Insira seu nome completo"
+                        value={createMainName}
+                        onChange={(e) => setCreateMainName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">(E-mail)</label>
+                      <input 
+                        type="email" 
+                        required 
+                        placeholder="Ex: maria@provedor.com"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">(Senha)</label>
+                      <input 
+                        type="password" 
+                        required 
+                        placeholder="Crie sua senha de acesso"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
+                      />
+                    </div>
+
+                    {/* Marketing & Terms Agreement Checkboxes */}
+                    <div className="space-y-3 pt-1">
+                      <div className="flex gap-2.5 items-start select-none">
+                        <input 
+                          type="checkbox" 
+                          id="marketing-opt"
+                          checked={newsletterConsent}
+                          onChange={(e) => setNewsletterConsent(e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-700 bg-slate-950 accent-amber-500 cursor-pointer mt-0.5"
+                        />
+                        <label htmlFor="marketing-opt" className="text-[11px] text-slate-400 font-sans leading-snug cursor-pointer">
+                          Desejo receber e-mail sobre horóscopo, promoções e novos conteúdos. (Opcional)
+                        </label>
+                      </div>
+
+                      <div className="flex gap-2.5 items-start select-none">
+                        <input 
+                          type="checkbox" 
+                          id="mandatory-terms"
+                          checked={termsConsent}
+                          onChange={(e) => setTermsConsent(e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-700 bg-slate-950 accent-amber-500 cursor-pointer mt-0.5"
+                        />
+                        <label htmlFor="mandatory-terms" className="text-[11px] text-slate-400 font-sans leading-snug cursor-pointer">
+                          Concordo com os Termos e a Política de privacidade. <span className="text-amber-500 font-black">*</span>
+                        </label>
                       </div>
                     </div>
 
-                    <div className="pt-2">
+                    <div className="flex gap-3 pt-2">
+                      <button 
+                        type="button" 
+                        onClick={() => setAuthTab('birth_info')}
+                        className="flex-1 py-3 text-xs bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 rounded-2xl text-slate-450 uppercase tracking-wider font-mono cursor-pointer transition text-center"
+                      >
+                        Voltar
+                      </button>
+                      
                       <button 
                         type="submit"
-                        className="w-full py-3.5 rounded-2xl bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-98 shadow-xl shadow-amber-500/10 cursor-pointer"
+                        className="flex-2 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider rounded-2xl transition active:scale-98 shadow-xl shadow-amber-500/15 cursor-pointer"
                       >
-                        Cadastrar e Sintonizar Agora
+                        Continuar
                       </button>
                     </div>
                   </form>
                 </>
               )}
 
+              {/* SCREEN C: Already registered? Log In Screen */}
               {authTab === 'login' && (
                 <>
                   <div className="space-y-1">
-                    <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2.5">
+                    <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
                       <Star className="w-5 h-5 text-amber-500 animate-pulse fill-amber-500/20" />
-                      Acesse sua Conta
+                      Já tem um cadastro?
                     </h3>
-                    <p className="text-xs text-slate-400">Insira seu e-mail e senha cadastrados para entrar no portal.</p>
+                    <p className="text-xs text-slate-400 font-sans">Acesse o seu portal com e-mail e senha correspondentes.</p>
                   </div>
 
                   <form onSubmit={handleLoginAccountSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">Seu E-mail</label>
+                      <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">(E-mail)</label>
                       <input 
                         type="email" 
                         required 
-                        placeholder="e.g. maria@provedor.com"
+                        placeholder="Ex: maria@provedor.com"
                         value={authEmail}
                         onChange={(e) => setAuthEmail(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
@@ -1949,56 +2042,101 @@ export default function App() {
                     </div>
                     
                     <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest">Senha de Acesso</label>
-                        <button
-                          type="button"
-                          onClick={() => setAuthTab('forgot_password')}
-                          className="text-[10px] font-sans font-bold text-amber-500 hover:text-amber-400 transition cursor-pointer"
-                        >
-                          Esqueceu a senha?
-                        </button>
-                      </div>
+                      <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">(Senha)</label>
                       <input 
                         type="password" 
                         required 
-                        placeholder="Digite sua senha"
+                        placeholder="Digite sua senha cadastrada"
                         value={authPassword}
                         onChange={(e) => setAuthPassword(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
                       />
                     </div>
 
-                    <div className="pt-2">
-                       <button 
+                    <div className="space-y-3 pt-3">
+                      <button 
                         type="submit"
-                        className="w-full py-3.5 rounded-2xl bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-98 shadow-xl shadow-amber-500/10 cursor-pointer"
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-98 shadow-xl shadow-amber-500/10 cursor-pointer"
                       >
-                        Entrar no Portal Premium
+                        Fazer login
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-xs font-bold transition duration-300 active:scale-98 shadow-sm cursor-pointer"
+                      >
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.12-3.12C17.43 1.68 14.9 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.6 2.8c.85-2.5 3.19-4.26 6.9-4.26z"
+                          />
+                          <path
+                            fill="#4285F4"
+                            d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.47h6.43c-.28 1.44-1.09 2.66-2.31 3.48l3.6 2.8c2.1-1.94 3.77-5.17 3.77-8.39z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.1 14.7c-.24-.73-.38-1.5-.38-2.3a7.3 7.3 0 01.38-2.3L1.5 7.3A11.9 11.9 0 000 12c0 1.74.37 3.4 1.03 4.9l4.07-3.2z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1.1 1.74-2.5 1.83-4.36 1.83-3.71 0-6.05-1.76-6.9-4.26L1.03 18.1C2.9 21.95 6.85 24 12 24z"
+                          />
+                        </svg>
+                        Login com Google
+                      </button>
+                    </div>
+
+                    <div className="pt-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthTab('forgot_password');
+                          setForgotEmail('');
+                        }}
+                        className="text-xs text-amber-500 hover:text-amber-400 font-bold font-sans transition cursor-pointer underline"
+                      >
+                        Esqueci minha senha
+                      </button>
+                    </div>
+
+                    <div className="pt-3 text-center text-[10px] font-sans text-slate-400 leading-normal">
+                      Ao criar uma conta, você concorda com os <span className="text-amber-500 underline cursor-pointer">Termos de uso</span> e a <span className="text-amber-500 underline cursor-pointer">Política de privacidade</span>.
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-850 flex items-center justify-center gap-1.5 text-xs">
+                      <span className="text-slate-400 font-sans">Não tem conta ainda?</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setAuthTab('birth_info')}
+                        className="text-amber-400 hover:text-amber-300 font-black font-sans uppercase tracking-wider underline cursor-pointer transition"
+                      >
+                        Criar Mapa Inteligente
                       </button>
                     </div>
                   </form>
                 </>
               )}
 
-              {/* Forgot password recover flow view */}
+              {/* SCREEN D: Forgot password recovery */}
               {authTab === 'forgot_password' && (
                 <>
                   <div className="space-y-1">
-                    <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2.5">
+                    <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
                       <Star className="w-5 h-5 text-amber-500 animate-pulse fill-amber-500/20" />
-                      Recuperação de Acesso
+                      Esqueci minha senha
                     </h3>
-                    <p className="text-xs text-slate-400">Enviaremos um link de restauração de senha para o seu endereço de e-mail cadastrado.</p>
+                    <p className="text-xs text-slate-400 font-sans">Enviaremos as orientações de recuperação de senha por e-mail para que possa criar uma nova senha.</p>
                   </div>
 
                   <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">Seu E-mail Cadastrado</label>
+                      <label className="block text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-1.5">E-mail Cadastrado</label>
                       <input 
                         type="email" 
                         required 
-                        placeholder="e.g. maria@provedor.com"
+                        placeholder="Ex: maria@provedor.com"
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-850 font-sans text-xs text-slate-200 focus:outline-hidden focus:border-amber-500/50"
@@ -2009,17 +2147,21 @@ export default function App() {
                       <button 
                         type="button"
                         onClick={() => setAuthTab('login')}
-                        className="flex-1 py-3.5 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950 text-slate-300 text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-98 cursor-pointer text-center"
+                        className="flex-1 py-3 text-xs bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 rounded-2xl text-slate-450 uppercase tracking-wider font-mono cursor-pointer transition text-center"
                       >
                         Voltar
                       </button>
                       <button 
                         type="submit"
                         disabled={isSendingReset}
-                        className="flex-2 py-3.5 rounded-2xl bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-98 shadow-xl shadow-amber-500/10 cursor-pointer disabled:opacity-50"
+                        className="flex-2 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider rounded-2xl transition active:scale-98 shadow-xl shadow-amber-500/10 cursor-pointer disabled:opacity-50"
                       >
                         {isSendingReset ? 'Enviando...' : 'Recuperar Senha'}
                       </button>
+                    </div>
+
+                    <div className="pt-3 text-center text-[10px] font-sans text-slate-400 leading-normal">
+                      Ao criar uma conta, você concorda com os <span className="text-amber-500 underline cursor-pointer">Termos de uso</span> e a <span className="text-amber-500 underline cursor-pointer">Política de privacidade</span>.
                     </div>
                   </form>
                 </>
@@ -4262,7 +4404,34 @@ export default function App() {
                   </div>
 
                   {/* Settings Actions */}
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-3">
+                    <button 
+                      onClick={() => {
+                        logoutWithFirebase().catch(console.warn);
+                        localStorage.removeItem("orbi_logged_email");
+                        setLoggedEmail("");
+                        setUser({
+                          name: "",
+                          birthDate: "",
+                          birthTime: "",
+                          birthCity: "",
+                          isUnknownTime: false,
+                          isPremium: true,
+                          hasCreatedMap: false
+                        });
+                        setMapData(null);
+                        setNumerology(null);
+                        setExtraMaps([]);
+                        setIsLoggedIn(false);
+                        triggerGlobalNotification("Portal Sair", "Sessão encerrada com sucesso.", "alert");
+                      }}
+                      type="button"
+                      className="w-full py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-2xl text-xs font-bold text-slate-350 hover:text-white font-sans uppercase tracking-wider transition active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4 text-amber-500" />
+                      Sair do Aplicativo
+                    </button>
+
                     <button 
                       onClick={() => setShowDeleteConfirm(true)}
                       type="button"
